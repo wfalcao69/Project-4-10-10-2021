@@ -1,0 +1,40 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+<h4 style="margin:35px;">{{ post.creator }} posted:</h4>
+<h6 style="color:red;margin:50px;">{{ post.content }}</h6>
+
+
+<!--<ul>
+    <li>Product: {{ product.name }}</li>
+    <li>
+        <img src="{{product.image}}" alt="image" style="width: 30%;"><br><br>
+    </li>
+</ul>-->
+
+<h2 style="margin:35px;">Add a Comment</h2>
+
+<form action="{% url 'comment_add' post.id %}" method="post"  style="margin:35px;">
+    {% csrf_token %}
+    <div class="form-group">
+        <input class="form-control" autofocus type="text" name="comment" placeholder="Your Comment Here">
+    </div>
+    <input type="submit">
+</form>
+
+<h2 style="margin:35px;">List of Comments</h2>
+
+<ul style="margin:35px;">
+    {% for comment in comments %}
+        <li>{{ comment }}</li>
+    {% empty %}
+        <li>No comments on this post.</li>
+    {% endfor %}
+</ul>
+
+
+
+<a style="margin:35px;" href="{% url 'index' %}">Back to All Posts</a>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+
+<!--
+  path("<str:name>", views.greet, name="greet")
+  def greet(request, name):
+    return HttpResponse(f"Hello, {name}!")
+    path("<int:flight_id>/book", views.book, name="book")
+ -->
+
+        <div id="all_posts" name="all_posts" rows="3" cols="180">
+        </div>
+
+        <!--<script>
+            document.getElementById('#all_posts').innerHTML = "";
+        </script>-->
+
+        <h1 style="margin-left: 35px;">{{ user2.username }}: posts from who you are following</h1>
+        {% for post in page_obj %}
+            <div class="well">
+              <a href="{% url 'profile' post.creator.id %}">{{ post.creator }}</a>: posted in {{ post.time_of_creation }}: <br> {{ post.content }} <br>
+              <h6><a href="{% url 'comment' post.id %}">Comments</a></h6>
+            </div>
+        {% endfor %}
+
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+    <script>
+
+
+      function w_set() {
+        document.querySelector('h5').innerHTML = 'Post sent';
+        setInterval(w_reset, 2000);
+
+
+      }
+
+      function w_reset() {
+        document.querySelector('h5').innerHTML = '';
+        window.location.reload(false);
+
+      }
+
+
+      document.addEventListener('DOMContentLoaded', compose_post);
+
+
+        function compose_post() {
+
+          // Disable button by default:
+          document.querySelector('#button').disabled = true;
+
+          // Listen for input to be typed into the input field
+          document.querySelector('#new_post').onkeyup = () => {
+              if (document.querySelector('#new_post').value.length > 0) {
+                  document.querySelector('#button').disabled = false;
+              }
+              else {
+                  document.querySelector('#button').disabled = true;
+              }
+          }
+
+          document.querySelector('#button').onclick = () =>  {
+
+            const content = document.getElementById("new_post").value;
+            console.log(content)
+            fetch('/posts', {
+            method: 'POST',
+            timeout:3000,
+            body: JSON.stringify({
+                content : content,
+
+            })
+            })
+
+          .then(response => response.json())
+          .then(result => {
+          // Print result
+           console.log(result);
+           //all_posts()
+         })
+         setInterval(w_set, 2000);
+
+        }
+
+      }
+
+
+    </script>
+
+    <h1 style="margin-left: 35px;">New Post</h1>
+    <div id="compose-post" class="row">
+        <div class="container-fluid" style="border: 1px outset red; background-color: lightblue; margin: 35px; padding: 10px">
+          <!--<h4 style="padding: 10px;">New Post</h4>-->
+          <form method="post" onsubmit="return false;">
+            {% csrf_token %}
+            <textarea id="new_post" name="new_post" rows="3" cols="180">
+            </textarea>
+            <br/>
+            <button type="button" id="button">Post</button>
+          </form>
+        </div>
+    </div>
+
+    <h5></h5>
+
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+        <h1 style="margin-left: 35px;">All Posts <span id="w_user" style="color: white;">{{ user.username }} </span></h1>
+
+        {% for post in page_obj %}
+          <div>
+
+                <h6 id="w_post{{ post.id }}" style="margin-left: 35px;">{{ post.id}}</h6>
+
+                <div class="well">
+                      <!-- The line below shows the content of each post fron the loop in the line 7-->
+                      <a href="{% url 'profile' post.creator.id %}">{{ post.creator }}</a>: posted in {{ post.time_of_creation }}: <br> <span id="mycontent{{ post.id }}">{{ post.content }} </span><br>
+
+                      <h6><a href="{% url 'comment' post.id %}">Comments</a></h6> <!-- clicking on this link leads to a window where you can add a comment-->
+
+                      <!-- the following 'if' codition aims to ensure that the 'edit' button appears if the user logged in and the post creator are the same person -->
+
+                      {% if user == post.creator %}
+                          <button type="button"  onclick="edit_post({{ post.id }})">Edit</button>
+                      {% endif %}
+
+                      <!-- the following div element only pops up if the Edit button is clicked-->
+
+                      <div id="{{ post.id }}" style="display:none">
+                          <textarea name="content" id="content{{ post.id }}" rows="3" cols="180">{{ post.content }}</textarea>
+                          <button id="bel" onclick="save_post({{ post.id }})">Save</button>
+                      </div>
+
+                      <!-- the div below is displayed if the logged user hasn't liked it yet. It enables to like it-->
+                      <div id="paulinho{{ post.id }}" style="display:none">
+                          <button class="paulinho" onclick="plus_like({{ post.id }})" style="color:red;" >'&#9825'</button><span class="likecounter{{post.id}}"></span>
+                          /* '&#9825' means hollow heart*/
+                      </div>
+
+                      <!-- the div below is displayed if the logged user clicked like before. It enables to cancel the like the user placed-->
+                      <div id="belzinha{{ post.id }}" style="display:none">
+                          <button class="belzinha" onclick="cancel_like({{ post.id }})" style="color:red;" >'&#10084'</button><span class="likecounter{{post.id}}"></span>
+                          /* '&#10084' means full heart*/
+
+                      </div>
+                </div>
+
+                  <script>
+                    fetch(`/like_button/{{post.id|safe}}/`)
+                    .then(response => response.json())
+                    .then(result => {
+                      let well = result.like_button
+                      /* well === '0' means that the logged user hasn't liked this post yet; other than this, it would mean that this user liked once. Only once*/
+                      if ( well === "0") {
+                        let paulinho = document.getElementById("paulinho"+{{post.id|safe}})
+                        paulinho.style.display = "block";
+
+                      } else {
+                        let belzinha = document.getElementById("belzinha"+{{post.id|safe}})
+                        belzinha.style.display = "block";
+                      }
+                    })
+
+                    fetch(`/likecounter/{{post.id|safe}}/`)
+                    .then(response => response.json())
+                    .then(result => {
+                      let counter = document.getElementByClassName("likecounter"+{{post.id|safe}})
+                      counter[0].innerHTML = result.likecount
+                      counter[1].innerHTML = result.likecount
+                    })
+
+                  </script>
+
+          </div>
+        {% endfor %}
+
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
+        <script>
+
+              function plus_like(post_id){
+                  fetch('/plus_like', {
+                    method: 'POST',
+                    timeout:3000,
+                    body: JSON.stringify({
+                        w_post : post_id,
+                      })
+                    })
+                    .then(response => response.json())
+                      .then(result => {
+                        let counter = document.getElementById('likecounter'+post_id);
+                        counter.innerHTML = result.likecount
+                        console.log(result.likecount)
+
+                        /* the next four lines will change the status of the like option for the logged user*/
+                        let paulinho = document.getElementById("paulinho"+{{post.id|safe}})
+                        paulinho.style.display = "none";
+
+                        let belzinha = document.getElementById("belzinha"+{{post.id|safe}})
+                        belzinha.style.display = "block";
+
+                      })
+              }
+              /*the function below is almost identical to the function above, except by the url path and
+              the acion like.delete() instead of like.save() in the views.py*/
+              function cancel_like(post_id){
+                  fetch('/plus_like', {
+                    method: 'POST',
+                    timeout:3000,
+                    body: JSON.stringify({
+                        w_post : post_id,
+                      })
+                    })
+                    .then(response => response.json())
+                      .then(result => {
+                        let counter = document.getElementById('likecounter'+post_id);
+                        counter.innerHTML = result.likecount
+                        console.log(result.likecount)
+
+                        /* the next four lines will change the status of the like option for the logged user*/
+                        let belzinha = document.getElementById("belzinha"+{{post.id|safe}})
+                        belzinha.style.display = "none";
+
+                        let paulinho = document.getElementById("paulinho"+{{post.id|safe}})
+                        paulinho.style.display = "block";
+
+                      })
+              }
+
+              function edit_post(post_id) {
+                  //document.getElementsByClassName("bel post_id").style.display = 'block';
+                  fetch(`/edit_2/${post_id}`)
+                  .then(response => response.json())
+                  .then(post => {
+                    console.log(post);
+                    let div = document.getElementById(post_id)
+                    div.style.display = "block";
+                  })
+              }
+
+              function save_post(post_id){
+                  const w_content = document.getElementById("content"+post_id).value;
+                    fetch(`/edit_2/${post_id}`, {
+                      method: 'PUT',
+                      body: JSON.stringify({
+                          content: w_content
+                      })
+                    })
+                .then(response => response.json())
+                .then(result => {
+                    document.getElementById("mycontent" + post_id).innerHTML = w_content;
+                    let div = document.getElementById(post_id);
+                    div.style.display = "none";
+                  })
+               }
+
+        </script>
+
+
+
+{% endblock %}
