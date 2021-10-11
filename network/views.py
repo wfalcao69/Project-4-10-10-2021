@@ -85,16 +85,21 @@ def plus_like(request):
         w_post = data.get("w_post")
         post = Post.objects.get(pk=w_post)
         user = request.user
-
-        like = Like(
-            user=user,
-            post=post
-        )
-        like.save()
+        if Like.objects.filter(user=user,post=post).exists():
+            Like.objects.filter(user=user, post=post).delete()
+            liked = False
+        else:
+            like = Like(
+                user=user,
+                post=post
+            )
+            like.save()
+            liked = True
         counter = Like.objects.filter(post=post).count()
         return JsonResponse({
             "Success": "like added",
-            "likecount":str(counter)
+            "likecount":str(counter),
+            "liked":liked
         }, status=200)
     return JsonResponse({
         "Error": "get methode"
@@ -133,8 +138,13 @@ def cancel_like(request):
 def likecounter(request,id):
     post = Post.objects.get(pk=id)
     counter = Like.objects.filter(post=post).count()
+    liked = False
+    if Like.objects.filter(user=request.user, post=post).exists():
+        liked = True
+
     return JsonResponse({
-        "likecount":str(counter)
+        "likecount":str(counter),
+        "liked":liked
     }, status=200)
 
 @csrf_exempt
@@ -143,7 +153,7 @@ def like_button(request,id):
     #post = Post.objects.get(pk=id)
     post = Post.objects.get(pk=id)
     #counter = Like.objects.filter(post=post).count()
-    like_button = Like.objects.filter(post=post).filter(user=request.user.username.count()
+    like_button = Like.objects.filter(post=post).filter(user=request.user).count()
     return JsonResponse({
         "like_button":str(like_button)
     }, status=200)
